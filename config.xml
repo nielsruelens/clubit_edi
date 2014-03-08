@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+		<record model="clubit.tools.edi.flow" id="clubit_tools_edi_flow_1">
+			<field name="name">Delivery Order DESADV(out)</field>
+			<field name="direction">out</field>
+			<field name="model">stock.picking.out</field>
+			<field name="method">send_desadv_out</field>
+			<field name="partner_resolver">edi_partner_resolver</field>
+		</record>
+		<record model="clubit.tools.edi.flow" id="clubit_tools_edi_flow_2">
+			<field name="name">Sales Order(in)</field>
+			<field name="direction">in</field>
+			<field name="model">sale.order</field>
+			<field name="method">edi_import</field>
+			<field name="validator">edi_import_validator</field>
+		</record>
+		<record model="clubit.tools.edi.flow" id="clubit_tools_edi_flow_3">
+			<field name="name">Delivery Order(in)</field>
+			<field name="direction">in</field>
+			<field name="model">stock.picking.out</field>
+			<field name="method">edi_import</field>
+			<field name="validator">edi_import_validator</field>
+		</record>
+		<record model="clubit.tools.edi.flow" id="clubit_tools_edi_flow_4">
+			<field name="name">Delivery Order(out)</field>
+			<field name="direction">out</field>
+			<field name="model">stock.picking.out</field>
+			<field name="method">send_edi_out</field>
+			<field name="partner_resolver">edi_partner_resolver</field>
+		</record>
+		<record model="clubit.tools.edi.flow" id="clubit_tools_edi_flow_5">
+			<field name="name">Invoice(out)</field>
+			<field name="direction">out</field>
+			<field name="model">account.invoice</field>
+			<field name="method">send_edi_out</field>
+			<field name="partner_resolver">edi_partner_resolver</field>
+		</record>
+	</data>
+</openerp>

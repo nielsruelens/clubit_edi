@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+        <act_window id="act_clubit_edi_desadv_out_out"
+            key2="client_action_multi" multi="True" name="Send DESADV"
+            res_model="clubit.tools.edi.wizard.outgoing.desadv"
+            src_model="stock.picking.out" target="new"
+            view_id="clubit_tools.clubit_tools_wizard_edi_outgoing_form" view_mode="form"
+            context="{'flow_id': ref('clubit_tools_edi_flow_1')}" />
+    </data>
+</openerp>

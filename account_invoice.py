@@ -258,9 +258,9 @@ class account_invoice(osv.Model, EDIMixin):
             for line_tax in line.invoice_line_tax_id:
                 vat = tax_db.browse(cr, uid, line_tax.id, context)
                 if "Bebat" in vat.name:
-                    edi_line['BEBAT'] += vat.amount
+                    edi_line['BEBAT'] += vat.amount * 1.21
                 elif "Recupel" in vat.name:
-                    edi_line['RECUPEL'] += vat.amount
+                    edi_line['RECUPEL'] += vat.amount * 1.21
                 elif "VAT" in vat.name:
                     edi_line['BTWPERCENTAGE'] = int(vat.amount*100)
                     edi_doc['FACTUURPERCENTAGE'] = edi_line['BTWPERCENTAGE']

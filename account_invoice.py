@@ -206,7 +206,10 @@ class account_invoice(osv.Model, EDIMixin):
         edi_doc['FACTUURSUBTOTAAL'] = invoice.amount_untaxed
 
 
-        partner = partner_db.browse(cr, uid, invoice.partner_id.id, context)
+        if invoice.partner_id.parent_id:
+            partner = partner_db.browse(cr, uid, invoice.partner_id.parent_id.id, context)
+        else:
+            partner = partner_db.browse(cr, uid, invoice.partner_id.id, context)
         if partner:
             edi_doc['FACTUURPLAATS']  = partner.ref
             edi_doc['BTWFACTUUR']  = partner.vat

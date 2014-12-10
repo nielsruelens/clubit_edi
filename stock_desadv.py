@@ -25,6 +25,7 @@ DESADV_PARTY = {
 
 DESADV = {
     'message': {
+        'desadv_naam': '',       #desadv_naam
         'berichtdatum': '',      #system date/time
         'pakbonnummer': '',      #stock.picking.out:name
         'leverplandatum': '',    #stock.picking.out:min_date
@@ -73,10 +74,8 @@ class stock_picking(osv.Model):
 
     _columns = {
         'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='DESADV sent'),
+        'desadv_name': fields.char('DESADV name', size=64),
     }
-
-
-
 
 
 
@@ -107,6 +106,7 @@ class stock_picking_out(osv.Model, EDIMixin):
 
     _columns = {
         'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='EDI sent'),
+        'desadv_name': fields.char('DESADV name', size=64),
     }
 
 
@@ -215,6 +215,7 @@ class stock_picking_out(osv.Model, EDIMixin):
         d = datetime.datetime.strptime(delivery.min_date, "%Y-%m-%d %H:%M:%S")
 
         edi_doc['message']['pakbonnummer']     = delivery.name
+        edi_doc['message']['desadv_naam']      = delivery.desadv_name
         edi_doc['message']['leverplandatum']   = d.strftime("%Y%m%d%H%M%S")
         edi_doc['message']['berichtdatum']     = now.strftime("%Y%m%d%H%M%S")
         edi_doc['message']['klantreferentie']  = delivery.order_reference

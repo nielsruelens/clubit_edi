@@ -205,7 +205,7 @@ class account_invoice(osv.Model, EDIMixin):
         edi_doc['FACTUURSUBTOTAAL'] = invoice.amount_untaxed
 
 
-## edi_doc['TOTAALBTW'] = float('%.2f' % ((invoice.amount_untaxed + edi_doc['BEBATTOTAAL'] + edi_doc['RECUPELTOTAAL'])
+        ## edi_doc['TOTAALBTW'] = float('%.2f' % ((invoice.amount_untaxed + edi_doc['BEBATTOTAAL'] + edi_doc['RECUPELTOTAAL'])
 
         partner = partner_db.browse(cr, uid, invoice.partner_id.id, context)
         if partner:

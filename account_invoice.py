@@ -202,14 +202,12 @@ class account_invoice(osv.Model, EDIMixin):
         edi_doc['FACTUURDATUM']     = invoice.date_invoice.replace('-','')
         edi_doc['KLANTREFERENTIE']  = invoice.name
         edi_doc['FACTUURTOTAAL']    = invoice.amount_total
-        edi_doc['FACTUURMVH']       = invoice.amount_untaxed
         edi_doc['FACTUURSUBTOTAAL'] = invoice.amount_untaxed
 
 
-        if invoice.partner_id.parent_id:
-            partner = partner_db.browse(cr, uid, invoice.partner_id.parent_id.id, context)
-        else:
-            partner = partner_db.browse(cr, uid, invoice.partner_id.id, context)
+## edi_doc['TOTAALBTW'] = float('%.2f' % ((invoice.amount_untaxed + edi_doc['BEBATTOTAAL'] + edi_doc['RECUPELTOTAAL'])
+
+        partner = partner_db.browse(cr, uid, invoice.partner_id.id, context)
         if partner:
             edi_doc['FACTUURPLAATS']  = partner.ref
             edi_doc['BTWFACTUUR']  = partner.vat
@@ -261,9 +259,9 @@ class account_invoice(osv.Model, EDIMixin):
             for line_tax in line.invoice_line_tax_id:
                 vat = tax_db.browse(cr, uid, line_tax.id, context)
                 if "Bebat" in vat.name:
-                    edi_line['BEBAT'] += vat.amount * 1.21
+                    edi_line['BEBAT'] += vat.amount
                 elif "Recupel" in vat.name:
-                    edi_line['RECUPEL'] += vat.amount * 1.21
+                    edi_line['RECUPEL'] += vat.amount
                 elif "VAT" in vat.name:
                     edi_line['BTWPERCENTAGE'] = int(vat.amount*100)
                     edi_doc['FACTUURPERCENTAGE'] = edi_line['BTWPERCENTAGE']
@@ -287,27 +285,11 @@ class account_invoice(osv.Model, EDIMixin):
 
         # Final tax calculation
         # ---------------------
-        edi_doc['TOTAALBTW'] = float('%.2f' % (invoice.amount_untaxed * edi_doc['FACTUURPERCENTAGE']/100))
-
+        edi_doc['TOTAALBTW'] = float('%.2f' % ((invoice.amount_untaxed + edi_doc['BEBATTOTAAL'] + edi_doc['RECUPELTOTAAL']) * edi_doc['FACTUURPERCENTAGE']/100))
+        edi_doc['FACTUURMVH']       = invoice.amount_untaxed + edi_doc['BEBATTOTAAL'] + edi_doc['RECUPELTOTAAL']
 
 
 
         # Return the result
         # -----------------
         return edi_doc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

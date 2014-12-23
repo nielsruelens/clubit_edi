@@ -291,7 +291,7 @@ class sale_order(osv.Model, EDIMixin):
             detail['delay']                 = False
             detail['discount']              = False
             detail['address_allotment_id']  = False
-            detail['th_weight']             = prod.weight * int(line['ordqua'])
+            detail['th_weight']             = prod.weight * float(line['ordqua'])
             detail['product_uos']           = False
             detail['type']                  = 'make_to_stock'
             detail['product_packaging']     = False

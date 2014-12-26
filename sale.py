@@ -102,10 +102,8 @@ class sale_order(osv.Model, EDIMixin):
                 found_by = True
             elif party['qual'] == 'DP':
                 found_dp = True
-            elif party['qual'] == 'IV':
-                found_iv = True
-        if not found_by or not found_dp or not found_iv:
-            edi_db.message_post(cr, uid, document.id, body='Error found: couldnt find all required partners BY,DP and IV.')
+        if not found_by or not found_dp:
+            edi_db.message_post(cr, uid, document.id, body='Error found: couldnt find all required partners BY,DP.')
             return False
 
 
@@ -235,13 +233,13 @@ class sale_order(osv.Model, EDIMixin):
         for party in data['partys']:
             if party['qual'] == 'BY':
                 pids = partner_db.search(cr, uid,[('ref', '=', party['gln'])])
-                brico = partner_db.browse(cr, uid, pids, context)[0]
-                param['partner_id']          = brico.id
-                param['user_id']             = brico.user_id.id
-                param['fiscal_position']     = brico.property_account_position.id
-                param['payment_term']        = brico.property_payment_term.id
-                param['pricelist_id']        = brico.property_product_pricelist.id
-                fiscal_pos = self.pool.get('account.fiscal.position').browse(cr, uid, brico.property_account_position.id) or False
+                buyer = partner_db.browse(cr, uid, pids, context)[0]
+                param['partner_id']          = buyer.id
+                param['user_id']             = buyer.user_id.id
+                param['fiscal_position']     = buyer.property_account_position.id
+                param['payment_term']        = buyer.property_payment_term.id
+                param['pricelist_id']        = buyer.property_product_pricelist.id
+                fiscal_pos = self.pool.get('account.fiscal.position').browse(cr, uid, buyer.property_account_position.id) or False
 
             if party['qual'] == 'IV':
                 pids = partner_db.search(cr, uid,[('ref', '=', party['gln'])])
@@ -252,6 +250,15 @@ class sale_order(osv.Model, EDIMixin):
                 pids = partner_db.search(cr, uid,[('ref', '=', party['gln'])])
                 dp = partner_db.browse(cr, uid, pids, context)[0]
                 param['partner_shipping_id']  = dp.id
+
+        # if IV partner is not present invoice partner is
+        #  - parent of BY or
+        #  - BY
+        if not param.get('partner_invoice_id', None):
+            buyer = partner_db.browse(cr, uid, param['partner_id'], context)
+            param['partner_invoice_id'] = buyer.id
+            if buyer.parent_id:
+                param['partner_invoice_id'] = buyer.parent_id.id
 
         if 'partner_shipping_id' not in param:
             param['partner_shipping_id'] = param['partner_id']

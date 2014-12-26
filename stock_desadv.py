@@ -73,7 +73,7 @@ class stock_picking(osv.Model):
 
 
     _columns = {
-        'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='DESADV sent'),
+        'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='Warehouse Sent'),
         'desadv_name': fields.char('DESADV name', size=64),
     }
 

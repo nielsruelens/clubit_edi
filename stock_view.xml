@@ -7,8 +7,8 @@
             <field name="inherit_id" ref="stock.view_picking_out_tree"/>
             <field name="arch" type="xml">
                 <field name="name" position="after">
-                    <field name="edi_sent" string="EDI sent" />
-                    <field name="desadv_sent" string="DESADV sent" />
+                    <field name="edi_sent" string="Warehouse Sent" />
+                    <field name="desadv_sent" string="Customer Sent" />
                 </field>
             </field>
         </record>

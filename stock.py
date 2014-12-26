@@ -85,19 +85,20 @@ class stock_picking(osv.Model):
     def _function_edi_sent_get(self, cr, uid, ids, field, arg, context=None):
         edi_db = self.pool.get('clubit.tools.edi.document.outgoing')
         flow_db = self.pool.get('clubit.tools.edi.flow')
-        flow_id = flow_db.search(cr, uid, [('model', '=', 'stock.picking.out'),('method', '=', 'send_edi_out')])[0]
+        flow_ids = flow_db.search(cr, uid, [('model', '=', 'stock.picking.out'),'|',('method', '=', 'send_edi_out'),('method', '=', 'send_essers_out')])
         res = dict.fromkeys(ids, False)
-        for pick in self.browse(cr, uid, ids, context=context):
-            docids = edi_db.search(cr, uid, [('flow_id', '=', flow_id),('reference', '=', pick.name)])
-            if not docids: continue
-            edi_docs = edi_db.browse(cr, uid, docids, context=context)
-            edi_docs.sort(key = lambda x: x.create_date, reverse=True)
-            res[pick.id] = edi_docs[0].create_date
+        for flow_id in flow_ids:
+            for pick in self.browse(cr, uid, ids, context=context):
+                docids = edi_db.search(cr, uid, [('flow_id', '=', flow_id),('reference', '=', pick.name)])
+                if not docids: continue
+                edi_docs = edi_db.browse(cr, uid, docids, context=context)
+                edi_docs.sort(key = lambda x: x.create_date, reverse=True)
+                res[pick.id] = edi_docs[0].create_date
         return res
 
 
     _columns = {
-        'edi_sent': fields.function(_function_edi_sent_get, type='datetime', string='EDI sent'),
+        'edi_sent': fields.function(_function_edi_sent_get, type='datetime', string='Customer Sent'),
     }
 
 

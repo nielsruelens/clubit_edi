@@ -216,7 +216,7 @@ class sale_order(osv.Model, EDIMixin):
         param['carrier_id']           = False
         param['invoice_quantity']     = 'order'
         param['client_order_ref']     = data['docnum']
-        param['date_order']           = data['deldtm'][:4] + '-' + data['deldtm'][4:-2] + '-' + data['deldtm'][6:]
+        param['requested_date']       = data['deldtm'][:4] + '-' + data['deldtm'][4:-2] + '-' + data['deldtm'][6:]
         param['message_ids']          = False
         param['note']                 = False
         param['project_id']           = False

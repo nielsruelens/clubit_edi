@@ -415,5 +415,9 @@ class sale_order(osv.Model, EDIMixin):
 #     u'shop_id': 1
 # }
 
-
+    def _get_date_planned(self, cr, uid, order, line, start_date, context=None):
+        result = super(sale_order,self)._get_date_planned(cr, uid, order, line, start_date, context)
+        if order.requested_date:
+            result = order.requested_date
+        return result
 

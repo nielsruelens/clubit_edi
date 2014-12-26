@@ -16,7 +16,8 @@
         'clubit_product',
         'clubit_reference_chainer',
         'delivery',
-    ],
+        'sale_order_dates',
+        ],
     'data': [
         'stock_view.xml',
         'account_view.xml',

@@ -69,8 +69,6 @@ DELIVERY_ORDER_EDI_STRUCT = {
 }
 
 
-
-
 class stock_picking(osv.Model):
     _name = "stock.picking"
     _inherit = "stock.picking"
@@ -98,7 +96,7 @@ class stock_picking(osv.Model):
 
 
     _columns = {
-        'edi_sent': fields.function(_function_edi_sent_get, type='datetime', string='Customer Sent'),
+        'edi_sent': fields.function(_function_edi_sent_get, type='datetime', string='Warehouse Sent'),
     }
 
 

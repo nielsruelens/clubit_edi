@@ -5,7 +5,6 @@ import json
 import copy
 from openerp.tools.translate import _
 
-
 """
 -------------------------------------------------------------------------------
     EDI Structures for the outgoing interface.
@@ -39,17 +38,9 @@ DESADV = {
     },
 }
 
-
-
-
-
-
-
-
 class stock_picking(osv.Model):
     _name = "stock.picking"
     _inherit = "stock.picking"
-
 
     ''' stock.picking:_function_edi_sent_desadv_get()
         ---------------------------------------------
@@ -60,26 +51,25 @@ class stock_picking(osv.Model):
     def _function_desadv_sent_get(self, cr, uid, ids, field, arg, context=None):
         edi_db = self.pool.get('clubit.tools.edi.document.outgoing')
         flow_db = self.pool.get('clubit.tools.edi.flow')
-        flow_id = flow_db.search(cr, uid, [('model', '=', 'stock.picking.out'),('method', '=', 'send_desadv_out')])[0]
+        flow_ids = flow_db.search(cr, uid, [('model', '=', 'stock.picking.out'),'|',('method', '=', 'send_desadv_out'),('method', '=', 'send_out_desadv_crossdock')])
         res = dict.fromkeys(ids, False)
-        for pick in self.browse(cr, uid, ids, context=context):
-            docids = edi_db.search(cr, uid, [('flow_id', '=', flow_id),('reference', '=', pick.name)])
-            if not docids: continue
-            edi_docs = edi_db.browse(cr, uid, docids, context=context)
-            edi_docs.sort(key = lambda x: x.create_date, reverse=True)
-            res[pick.id] = edi_docs[0].create_date
+        earliest_date = False
+        for flow_id in flow_ids:
+            for pick in self.browse(cr, uid, ids, context=context):
+                docids = edi_db.search(cr, uid, [('flow_id', '=', flow_id),('reference', '=', pick.name)])
+                if not docids: continue
+                edi_docs = (edi_db.browse(cr, uid, docids, context=context))
+                edi_docs.sort(key = lambda x: x.create_date, reverse=True)
+                if earliest_date and earliest_date < edi_docs[0].create_date:
+                    continue
+                earliest_date = edi_docs[0].create_date
+        if earliest_date: res[pick.id] = earliest_date
         return res
 
-
-
     _columns = {
-        'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='Warehouse Sent'),
+        'desadv_sent': fields.function(_function_desadv_sent_get, type='datetime', string='Customer Sent'),
         'desadv_name': fields.char('DESADV name', size=64),
     }
-
-
-
-
 
 """
 -------------------------------------------------------------------------------
@@ -92,8 +82,6 @@ class stock_picking_out(osv.Model, EDIMixin):
 
     _directory_out_brico  = "EDI/to_brico/shipments/incoming/"
     _directory_out_praxis = "EDI/to_praxis/shipments/incoming/"
-
-
 
     ''' stock.picking.out:_function_edi_sent_desadv_get()
         -------------------------------------------------
@@ -109,10 +97,6 @@ class stock_picking_out(osv.Model, EDIMixin):
         'desadv_name': fields.char('DESADV name', size=64),
     }
 
-
-
-
-
     ''' stock.picking.out:send_desadv_out()
         -----------------------------------
         This method will perform the export of a delivery
@@ -121,15 +105,12 @@ class stock_picking_out(osv.Model, EDIMixin):
         otherwise an error will occur.
         ------------------------------------------------- '''
     def send_desadv_out(self, cr, uid, items, context=None):
-
-
         edi_db = self.pool.get('clubit.tools.edi.document.outgoing')
 
         # Get the selected items
         # ----------------------
         pickings = [x['id'] for x in items]
         pickings = self.browse(cr, uid, pickings, context=context)
-
 
         # Loop over all pickings to check if their
         # collective states allow for EDI processing
@@ -141,7 +122,6 @@ class stock_picking_out(osv.Model, EDIMixin):
         if nope:
             raise osv.except_osv(_('Warning!'), _("Not all documents had states 'assigned' or 'confirmed'. Please exclude the following documents: {!s}").format(nope))
 
-
         # Actual processing of all the deliveries
         # ---------------------------------------
         for pick in pickings:
@@ -151,10 +131,6 @@ class stock_picking_out(osv.Model, EDIMixin):
             if result != True:
                 raise osv.except_osv(_('Error!'), _("Something went wrong while trying to create one of the EDI documents. Please contact your system administrator. Error given: {!s}").format(result))
 
-
-
-
-
     ''' stock.picking.out:desadv_partner_resolver()
         -------------------------------------------
         This method attempts to find the correct partner
@@ -162,7 +138,6 @@ class stock_picking_out(osv.Model, EDIMixin):
         number of deliveries.
         ------------------------------------------------ '''
     def desadv_partner_resolver(self, cr, uid, ids, context):
-
         order_db   = self.pool.get('sale.order')
         result_list = []
         for pick in self.browse(cr, uid, ids, context):
@@ -172,9 +147,6 @@ class stock_picking_out(osv.Model, EDIMixin):
             order = order_db.browse(cr, uid, so_id, context)[0]
             result_list.append({'id' : pick.id, 'partner_id': order.partner_id.id})
         return result_list
-
-
-
 
     def edi_export_desadv(self, cr, uid, delivery, edi_struct=None, context=None):
         """This method creates an EDI dictionary of an delivery.
@@ -208,8 +180,6 @@ class stock_picking_out(osv.Model, EDIMixin):
         company  = company_db.browse(cr, uid, co_id, context)
         now = datetime.datetime.now()
 
-
-
         # Basic header fields
         # -------------------
         d = datetime.datetime.strptime(delivery.min_date, "%Y-%m-%d %H:%M:%S")
@@ -220,8 +190,6 @@ class stock_picking_out(osv.Model, EDIMixin):
         edi_doc['message']['berichtdatum']     = now.strftime("%Y%m%d%H%M%S")
         edi_doc['message']['klantreferentie']  = delivery.order_reference
 
-
-
         # Partner details
         # ---------------
         partner = partner_db.browse(cr, uid, order.partner_id.id, context)
@@ -231,7 +199,6 @@ class stock_picking_out(osv.Model, EDIMixin):
             partner_doc['gln']  = partner.ref
             edi_doc['message']['partys']['party'].append(partner_doc)
 
-
         if company:
             partner = partner_db.browse(cr, uid, company.partner_id.id, context)
             if partner and partner.ref:
@@ -240,15 +207,12 @@ class stock_picking_out(osv.Model, EDIMixin):
                 partner_doc['gln']  = partner.ref
                 edi_doc['message']['partys']['party'].append(partner_doc)
 
-
         partner = partner_db.browse(cr, uid, delivery.partner_id.id, context)
         if partner and partner.ref:
             partner_doc = copy.deepcopy(dict(DESADV_PARTY))
             partner_doc['qual'] = 'DP'
             partner_doc['gln']  = partner.ref
             edi_doc['message']['partys']['party'].append(partner_doc)
-
-
 
         # Line items
         # ----------
@@ -263,24 +227,6 @@ class stock_picking_out(osv.Model, EDIMixin):
             line_counter = line_counter + 1
             edi_doc['message']['cpss']['cps']['lines']['line'].append(edi_line)
 
-
-
         # Return the result
         # -----------------
         return edi_doc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

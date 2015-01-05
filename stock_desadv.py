@@ -60,7 +60,7 @@ class stock_picking(osv.Model):
                 if not docids: continue
                 edi_docs = (edi_db.browse(cr, uid, docids, context=context))
                 edi_docs.sort(key = lambda x: x.create_date, reverse=True)
-                if earliest_date and earliest_date < edi_docs[0].create_date:
+                if earliest_date and earliest_date > edi_docs[0].create_date:
                     continue
                 earliest_date = edi_docs[0].create_date
         if earliest_date: res[pick.id] = earliest_date

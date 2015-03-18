@@ -1,6 +1,7 @@
 from openerp.osv import osv, fields
 from openerp.addons.edi import EDIMixin
 import datetime
+import string
 import json
 import copy
 import shutil
@@ -33,8 +34,13 @@ LINE = {
 
 INVOICE = {
     'FACTUURNUMMER': '',            #account.invoice:number
+    'FACTUURNAAM': '', 
+    'ORDERSTRAAT': '',              #order.partner_id.street
+    'ORDERPOSTCODE': '',            #order.partner_id.zip
+    'ORDERSTAD': '',                #order.partner_id.city
     'DATUM': '',                    #account.invoice:create_date
     'FACTUURDATUM': '',             #account.invoice:date_invoice
+    'VERVALDATUM': '',              #account.invoice:date_due
     'LEVERDATUM': '',               #account.invoice:origin -> stock.picking.out:date_done
     'KLANTREFERENTIE': '',          #account.invoice:name
     'REFERENTIEDATUM': '',          #account.invoice:origin -> sale.order:date_order
@@ -200,6 +206,7 @@ class account_invoice(osv.Model, EDIMixin):
         edi_doc['FACTUURNUMMER']    = invoice.number
         edi_doc['DATUM']            = now.strftime("%Y%m%d")
         edi_doc['FACTUURDATUM']     = invoice.date_invoice.replace('-','')
+        edi_doc['VERVALDATUM']      = invoice.date_due.replace('-','')
         edi_doc['KLANTREFERENTIE']  = invoice.name
         edi_doc['FACTUURTOTAAL']    = invoice.amount_total
         edi_doc['FACTUURSUBTOTAAL'] = invoice.amount_untaxed
@@ -211,19 +218,30 @@ class account_invoice(osv.Model, EDIMixin):
         if partner:
             edi_doc['FACTUURPLAATS']  = partner.ref
             edi_doc['BTWFACTUUR']  = partner.vat
+            edi_doc['ORDERPLAATS'] = order.partner_id.ref
+            edi_doc['ORDERSTRAAT'] = order.partner_id.street[:70].upper()
+            edi_doc['ORDERPOSTCODE'] = order.partner_id.zip
+            edi_doc['ORDERSTAD'] = order.partner_id.city
+            edi_doc['FACTUURNAAM'] = invoice.partner_id.name
         if company:
             partner = partner_db.browse(cr, uid, company.partner_id.id, context)
             if partner:
                 edi_doc['LEVERANCIER']  = partner.ref
                 edi_doc['BTWLEVERANCIER']  = partner.vat
-
-
+                edi_doc['ORDERPLAATS'] = order.partner_id.ref
+                edi_doc['ORDERSTRAAT'] = order.partner_id.street[:70].upper()
+                edi_doc['ORDERPOSTCODE'] = order.partner_id.zip
+                edi_doc['ORDERSTAD'] = order.partner_id.city
+                edi_doc['FACTUURNAAM'] = invoice.partner_id.name
 
         # Delivery order fields
         # ---------------------
         d = datetime.datetime.strptime(delivery.date_done, "%Y-%m-%d %H:%M:%S")
         edi_doc['LEVERDATUM']      = d.strftime("%Y%m%d")
-        edi_doc['LEVERINGSBON']    = delivery.name
+        if delivery.desadv_name:
+            edi_doc['LEVERINGSBON']    = delivery.desadv_name
+        else:
+            edi_doc['LEVERINGSBON']    = delivery.name
 
         d = datetime.datetime.strptime(delivery.min_date, "%Y-%m-%d %H:%M:%S")
         edi_doc['LEVERPLANDATUM']  = d.strftime("%Y%m%d")
@@ -248,7 +266,7 @@ class account_invoice(osv.Model, EDIMixin):
             edi_line = copy.deepcopy(dict(LINE))
             edi_line['ARTIKEL']             = product.ean13
             edi_line['ARTIKELREF']          = product.name
-            edi_line['ARTIKELOMSCHRIJVING'] = product.name
+            edi_line['ARTIKELOMSCHRIJVING'] = product.description_sale[:35].upper()
             edi_line['AANTAL']              = line.quantity
             edi_line['AANTALGELEVERD']      = line.quantity
             edi_line['LIJNTOTAAL']          = line.price_subtotal
